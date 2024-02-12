@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jrgmonsalve/barracuda/src/zincsearch"
+	"github.com/rs/cors"
 )
 
 type searchRequest struct {
@@ -25,7 +26,7 @@ func main() {
 	log.Println("Starting server on port: ", port)
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
-
+	r.Use(corsMiddleware)
 	r.Post("/emails/search", func(w http.ResponseWriter, r *http.Request) {
 		log.Println("Request: ", r)
 
@@ -36,18 +37,45 @@ func main() {
 			return
 		}
 
-		result, err := zincsearch.QueryByEmail(req.FieldName, req.Value)
+		result, err := zincsearch.QueryByEmailField(req.FieldName, req.Value)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-
 		w.WriteHeader(http.StatusOK)
+		log.Println(result)
+		w.Write(result)
+	})
+	r.Get("/emails/{id}", func(w http.ResponseWriter, r *http.Request) {
+		id := chi.URLParam(r, "id")
+		log.Println("Fetching email with ID: ", id)
 
+		result, err := zincsearch.QueryByEmailId(id)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if result == nil {
+			http.Error(w, "Email not found", http.StatusNotFound)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		log.Println(result)
 		w.Write(result)
 	})
 
 	http.ListenAndServe(":"+port, r)
+}
+
+func corsMiddleware(next http.Handler) http.Handler {
+	return cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:8080"}, // Ajusta esta lista según tu caso
+		AllowCredentials: true,
+		Debug:            true,
+	}).Handler(next)
 }

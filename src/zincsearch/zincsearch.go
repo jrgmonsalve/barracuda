@@ -11,14 +11,14 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func QueryByEmail(fieldName, value string) ([]byte, error) {
+func QueryByEmailField(fieldName, value string) ([]byte, error) {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error cargando el archivo .env")
 	}
 
 	// Obtener las variables de entorno
-	url := os.Getenv("API_URL")
+	url := os.Getenv("API_URL") + "/emails/_search"
 	user := os.Getenv("API_USER")
 	password := os.Getenv("API_PASSWORD")
 
@@ -30,9 +30,9 @@ func QueryByEmail(fieldName, value string) ([]byte, error) {
 		},
 		"sort_fields": ["-@timestamp"],
 		"from": 0,
-		"max_results": 1,
+		"max_results": 3,
 		"_source": [
-			"to","from","subject","body"
+			"to","from","subject"
 		]
 	}`, value, fieldName)
 	fmt.Println(query)
@@ -42,7 +42,37 @@ func QueryByEmail(fieldName, value string) ([]byte, error) {
 	}
 	req.SetBasicAuth(user, password)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return body, err
+}
+
+func QueryByEmailId(id string) ([]byte, error) {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error cargando el archivo .env")
+	}
+
+	// Obtener las variables de entorno
+	url := os.Getenv("API_URL") + "/emails/_doc/" + id
+	user := os.Getenv("API_USER")
+	password := os.Getenv("API_PASSWORD")
+	log.Println("url:", url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	req.SetBasicAuth(user, password)
+	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
