@@ -45,7 +45,6 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		log.Println(result)
 		w.Write(result)
 	})
 	r.Get("/emails/{id}", func(w http.ResponseWriter, r *http.Request) {
@@ -65,7 +64,6 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		log.Println(result)
 		w.Write(result)
 	})
 

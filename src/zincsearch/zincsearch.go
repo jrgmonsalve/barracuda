@@ -18,7 +18,7 @@ func QueryByEmailField(fieldName, value string) ([]byte, error) {
 	}
 
 	// Obtener las variables de entorno
-	url := os.Getenv("API_URL") + "/emails/_search"
+	url := os.Getenv("API_URL") + "/" + os.Getenv("INDEX_NAME") + "/_search"
 	user := os.Getenv("API_USER")
 	password := os.Getenv("API_PASSWORD")
 
@@ -63,7 +63,7 @@ func QueryByEmailId(id string) ([]byte, error) {
 	}
 
 	// Obtener las variables de entorno
-	url := os.Getenv("API_URL") + "/emails/_doc/" + id
+	url := os.Getenv("API_URL") + "/" + os.Getenv("INDEX_NAME") + "/_doc/" + id
 	user := os.Getenv("API_USER")
 	password := os.Getenv("API_PASSWORD")
 	log.Println("url:", url)
